@@ -3,6 +3,7 @@ import SwiftUI
 struct VideoCard: View {
     let video: ResolvedVideo
     var onHoverChanged: (Bool) -> Void = { _ in }
+    var onTap: () -> Void = {}
     @State private var hovering = false
 
     var body: some View {
@@ -15,6 +16,10 @@ struct VideoCard: View {
             .frame(height: 140)
             .cornerRadius(8)
             .clipped()
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.white.opacity(hovering ? 0.3 : 0), lineWidth: 2)
+            )
 
             Text(video.title)
                 .font(.system(.subheadline, design: .rounded).weight(.medium))
@@ -29,10 +34,14 @@ struct VideoCard: View {
         .background(Color(white: hovering ? 0.16 : 0.12))
         .cornerRadius(10)
         .scaleEffect(hovering ? 1.04 : 1)
-        .animation(.easeOut(duration: 0.15), value: hovering)
+        .animation(.easeOut(duration: 0.2), value: hovering)
         .onHover { h in
             hovering = h
             onHoverChanged(h)
         }
+        .onTapGesture {
+            onTap()
+        }
+        .contentShape(Rectangle())
     }
 }

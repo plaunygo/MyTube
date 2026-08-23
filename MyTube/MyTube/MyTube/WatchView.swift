@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 struct WatchView: View {
     @ObservedObject var vm: VideoViewModel
@@ -12,8 +11,8 @@ struct WatchView: View {
                 .frame(height: 420)
                 .background(Color.black)
                 .overlay {
-                    if let err = vm.playbackError {
-                        Text(err)
+                    if let error = vm.playbackError {
+                        Text(error)
                             .font(.caption)
                             .foregroundColor(.red)
                             .multilineTextAlignment(.center)
@@ -62,30 +61,30 @@ struct WatchView: View {
                 .foregroundColor(.white)
 
             HStack(spacing: 12) {
-                if let cur = vm.current {
-                    let ref = cur.channelRef
+                if let current = vm.current {
+                    let channelRef = current.channelRef
                     HStack(spacing: 8) {
                         Circle()
                             .fill(Color(white: 0.25))
                             .frame(width: 28, height: 28)
-                        Text(ref.name)
+                        Text(channelRef.name)
                             .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundColor(Color(white: 0.8))
-                            .onHover { h in
-                                if h { vm.hoveredUser = ref }
-                                else if vm.hoveredUser == ref { vm.hoveredUser = nil }
+                            .onHover { hovering in
+                                if hovering { vm.hoveredUser = channelRef }
+                                else if vm.hoveredUser == channelRef { vm.hoveredUser = nil }
                             }
-                            .onTapGesture { vm.showProfilePinned(ref) }
+                            .onTapGesture { vm.showProfilePinned(channelRef) }
                     }
                 }
 
                 Spacer()
 
                 Button { vm.downloadCurrent() } label: {
-                    if let p = vm.downloadProgress {
+                    if let progress = vm.downloadProgress {
                         HStack(spacing: 8) {
-                            ProgressView(value: p).frame(width: 90)
-                            Text("\(Int(p * 100))%")
+                            ProgressView(value: progress).frame(width: 90)
+                            Text("\(Int(progress * 100))%")
                                 .font(.caption).monospacedDigit()
                         }
                     } else {
