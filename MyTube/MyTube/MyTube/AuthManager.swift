@@ -41,34 +41,25 @@ final class AuthManager: ObservableObject {
             
             // Сохраняем имя пользователя если предоставлено
             if let username = username, !username.isEmpty {
-                saveToKeychain(username, account: usernameAccount)
+                _ = saveToKeychain(username, account: usernameAccount)
                 self.username = username
-            }
-            
-            // Устанавливаем ключ в StreamResolver
-            Task {
-                await StreamResolver.shared.setApiKey(key)
             }
         }
         return success
     }
     
     func logout() {
-        deleteFromKeychain(account: account)
-        deleteFromKeychain(account: usernameAccount)
+        _ = deleteFromKeychain(account: account)
+        _ = deleteFromKeychain(account: usernameAccount)
         apiKey = nil
         username = nil
         isLoggedIn = false
-        
-        Task {
-            await StreamResolver.shared.setApiKey(nil)
-        }
     }
     
     // MARK: - Keychain операции
     
     private func saveToKeychain(_ value: String, account: String) -> Bool {
-        let data = value.data(using: .utf8)!
+        let data = Data(value.utf8)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -77,7 +68,7 @@ final class AuthManager: ObservableObject {
         ]
         
         // Сначала удаляем существующую запись
-        SecItemDelete(query as CFDictionary)
+        _ = SecItemDelete(query as CFDictionary)
         
         // Добавляем новую
         var addItemQuery = query

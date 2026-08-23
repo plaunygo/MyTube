@@ -1,31 +1,28 @@
 ```
-# Build artifacts
-*.o
-*.obj
-*.out
-
-# Dependencies
-Pods/
-Carthage/
+# Xcode
 build/
+*.xcodeproj/
+*.xcworkspace/
 DerivedData/
+
+# Swift
+*.swiftmodule/
+*.swiftdoc/
+*.sib/
 
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
-# Logs and temp files
+# Logs
 *.log
+
+# Temporary files
 *.tmp
 *.swp
 
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# macOS
-.DS_Store
+# Dependencies
+Pods/
+Carthage/
 ```

@@ -1,7 +1,6 @@
 import Foundation
 import SwiftUI
 import AppKit
-import Combine
 
 extension Notification.Name {
     static let focusSearch = Notification.Name("focusSearch")
@@ -57,13 +56,7 @@ final class VideoViewModel: ObservableObject {
             DispatchQueue.main.async { self?.closePreview() }
         }
         
-        // Инициализируем API ключ из AuthManager
-        if let apiKey = AuthManager.shared.apiKey {
-            Task {
-                await StreamResolver.shared.setApiKey(apiKey)
-            }
-        }
-
+        // Инициализируем API ключ из AuthManager при загрузке
         Task { @MainActor [weak self] in await self?.loadInitial() }
     }
 

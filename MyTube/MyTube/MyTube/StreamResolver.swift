@@ -3,13 +3,8 @@ import Foundation
 actor StreamResolver {
     private let ytdlpPath = "/opt/homebrew/bin/yt-dlp"
     private var lastStderr = ""
-    private var apiKey: String?
     
     static let shared = StreamResolver()
-    
-    func setApiKey(_ key: String?) {
-        apiKey = key
-    }
 
     static func videoID(from url: URL) -> String? {
         if let v = URLComponents(url: url, resolvingAgainstBaseURL: false)?
@@ -138,16 +133,11 @@ actor StreamResolver {
 
     private func postNext(_ body: [String: Any]) async throws -> [String: Any] {
         var full = body
-        var clientInfo: [String: Any] = [
+        let clientInfo: [String: Any] = [
             "clientName": "WEB",
             "clientVersion": "2.20250701.00.00",
             "hl": "ru"
         ]
-        
-        // Добавляем API ключ если есть
-        if let apiKey = apiKey {
-            clientInfo["key"] = apiKey
-        }
         
         full["context"] = ["client": clientInfo]
         
@@ -156,11 +146,6 @@ actor StreamResolver {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
                      forHTTPHeaderField: "User-Agent")
-        
-        // Добавляем заголовок авторизации если есть ключ
-        if let apiKey = apiKey {
-            req.setValue("SAPISIDHASH \(apiKey)", forHTTPHeaderField: "Authorization")
-        }
         
         req.httpBody = try JSONSerialization.data(withJSONObject: full)
         let (data, resp) = try await URLSession.shared.data(for: req)
