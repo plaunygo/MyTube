@@ -1,0 +1,31 @@
+```
+# Build artifacts
+*.o
+*.obj
+*.out
+
+# Dependencies
+Pods/
+Carthage/
+build/
+DerivedData/
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+```

@@ -27,8 +27,9 @@ struct BrowseView: View {
                             VideoCard(video: video) { h in
                                 if h { vm.hoveredVideo = video }
                                 else if vm.hoveredVideo == video { vm.hoveredVideo = nil }
+                            } onTap: {
+                                vm.open(video)
                             }
-                            .onTapGesture { vm.open(video) }
                         }
                     }
                     .padding(16)

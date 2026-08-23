@@ -56,6 +56,13 @@ final class VideoViewModel: ObservableObject {
         PreviewWindowController.shared.onClose = { [weak self] in
             DispatchQueue.main.async { self?.closePreview() }
         }
+        
+        // Инициализируем API ключ из AuthManager
+        if let apiKey = AuthManager.shared.apiKey {
+            Task {
+                await StreamResolver.shared.setApiKey(apiKey)
+            }
+        }
 
         Task { @MainActor [weak self] in await self?.loadInitial() }
     }

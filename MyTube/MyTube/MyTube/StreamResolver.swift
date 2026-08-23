@@ -3,6 +3,13 @@ import Foundation
 actor StreamResolver {
     private let ytdlpPath = "/opt/homebrew/bin/yt-dlp"
     private var lastStderr = ""
+    private var apiKey: String?
+    
+    static let shared = StreamResolver()
+    
+    func setApiKey(_ key: String?) {
+        apiKey = key
+    }
 
     static func videoID(from url: URL) -> String? {
         if let v = URLComponents(url: url, resolvingAgainstBaseURL: false)?
@@ -18,15 +25,23 @@ actor StreamResolver {
     // MARK: - Воспроизведение: цепочка стратегий
 
     func resolve(url: URL, preview: Bool = false) async throws -> PlaybackInfo {
-        for client in ["ios", "web_safari", "tv"] {
-            if let u = try? await hlsURL(url: url, preview: preview, client: client) {
+        // Пробуем с разными клиентами для обхода ограничений
+        for client in ["ios", "web_safari", "tv", "web"] {
+            do {
+                let u = try await hlsURL(url: url, preview: preview, client: client)
                 return PlaybackInfo(videoURL: u, audioURL: nil)
+            } catch {
+                continue
             }
         }
+        
+        // Фоллбэк на прямой формат
         do {
             let data = try await execute([
                 "--no-playlist", "--ignore-config", "--no-warnings", "--dump-json",
-                "-f", "18/b",
+                "-f", "best[height<=720]/best",
+                "--socket-timeout", "30",
+                "--extractor-retries", "3",
                 url.absoluteString
             ])
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -47,6 +62,7 @@ actor StreamResolver {
             "--no-playlist", "--ignore-config", "--no-warnings", "--dump-json",
             "--extractor-args", "youtube:player_client=\(client)",
             "-f", fmt,
+            "--socket-timeout", "30",
             url.absoluteString
         ])
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -61,7 +77,8 @@ actor StreamResolver {
     func search(query: String, limit: Int = 30) async throws -> [ResolvedVideo] {
         let data = try await execute([
             "ytsearch\(limit):\(query)",
-            "--flat-playlist", "--ignore-config", "--no-warnings", "-J"
+            "--flat-playlist", "--ignore-config", "--no-warnings", "-J",
+            "--socket-timeout", "30"
         ])
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let entries = json["entries"] as? [[String: Any]] else {
@@ -75,6 +92,7 @@ actor StreamResolver {
     func metadata(url: URL) async throws -> ResolvedVideo {
         let data = try await execute([
             "--no-playlist", "--ignore-config", "--no-warnings", "--dump-json",
+            "--socket-timeout", "30",
             url.absoluteString
         ])
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -93,7 +111,7 @@ actor StreamResolver {
         )
     }
 
-    // MARK: - Комментарии через InnerTube (без аккаунта, с пагинацией)
+    // MARK: - Комментарии через InnerTube (с поддержкой авторизации)
 
     func comments(videoID: String) async throws -> CommentsPage {
         let first = try await postNext(["videoId": videoID])
@@ -120,21 +138,35 @@ actor StreamResolver {
 
     private func postNext(_ body: [String: Any]) async throws -> [String: Any] {
         var full = body
-        full["context"] = [
-            "client": [
-                "clientName": "WEB",
-                "clientVersion": "2.20250701.00.00",
-                "hl": "ru"
-            ]
+        var clientInfo: [String: Any] = [
+            "clientName": "WEB",
+            "clientVersion": "2.20250701.00.00",
+            "hl": "ru"
         ]
+        
+        // Добавляем API ключ если есть
+        if let apiKey = apiKey {
+            clientInfo["key"] = apiKey
+        }
+        
+        full["context"] = ["client": clientInfo]
+        
         var req = URLRequest(url: URL(string: "https://www.youtube.com/youtubei/v1/next?prettyPrint=false")!)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
                      forHTTPHeaderField: "User-Agent")
+        
+        // Добавляем заголовок авторизации если есть ключ
+        if let apiKey = apiKey {
+            req.setValue("SAPISIDHASH \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        
         req.httpBody = try JSONSerialization.data(withJSONObject: full)
         let (data, resp) = try await URLSession.shared.data(for: req)
-        guard (resp as? HTTPURLResponse)?.statusCode == 200 else { throw ResolverError.failed }
+        guard (resp as? HTTPURLResponse)?.statusCode == 200 else { 
+            throw ResolverError.failed 
+        }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw ResolverError.badData
         }
