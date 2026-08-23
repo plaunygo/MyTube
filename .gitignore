@@ -1,19 +1,37 @@
 ```
+# Build artifacts
+*.o
+*.obj
+*.a
+*.lib
+*.dylib
+*.so
+*.dll
+*.exe
+*.out
+
 # Xcode
-build/
 *.xcodeproj/
 *.xcworkspace/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
 DerivedData/
+build/
 
 # Swift
-*.swiftmodule/
-*.swiftdoc/
-*.sib/
+*.swiftmodule
+*.swiftdoc
+*.swiftsourceinfo
+
+# Dependencies
+Pods/
+Carthage/
+vendor/
 
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
 # Logs
 *.log
@@ -21,8 +39,9 @@ DerivedData/
 # Temporary files
 *.tmp
 *.swp
+*.swo
 
-# Dependencies
-Pods/
-Carthage/
+# OS generated files
+.DS_Store
+Thumbs.db
 ```

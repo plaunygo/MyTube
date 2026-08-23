@@ -141,6 +141,11 @@ actor StreamResolver {
         
         full["context"] = ["client": clientInfo]
         
+        // Добавляем API ключ если он есть в AuthManager
+        if let apiKey = AuthManager.shared.apiKey, !apiKey.isEmpty {
+            full["key"] = apiKey
+        }
+        
         var req = URLRequest(url: URL(string: "https://www.youtube.com/youtubei/v1/next?prettyPrint=false")!)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")

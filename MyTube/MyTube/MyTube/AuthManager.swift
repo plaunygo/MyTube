@@ -5,9 +5,9 @@ import SwiftUI
 final class AuthManager: ObservableObject {
     static let shared = AuthManager()
     
-    @Published var isLoggedIn = false
-    @Published var apiKey: String?
-    @Published var username: String?
+    @Published var isLoggedIn: Bool = false
+    @Published var apiKey: String? = nil
+    @Published var username: String? = nil
     
     private let service = "MyTube"
     private let account = "youtube_api_key"
@@ -18,13 +18,11 @@ final class AuthManager: ObservableObject {
     }
     
     func loadCredentials() {
-        // Загружаем API ключ из Keychain
         if let key = loadFromKeychain(account: account) {
             apiKey = key
             isLoggedIn = true
         }
         
-        // Загружаем имя пользователя
         if let name = loadFromKeychain(account: usernameAccount) {
             username = name
         }
@@ -33,13 +31,11 @@ final class AuthManager: ObservableObject {
     func saveApiKey(_ key: String, username: String? = nil) -> Bool {
         guard !key.isEmpty else { return false }
         
-        // Сохраняем API ключ
         let success = saveToKeychain(key, account: account)
         if success {
             apiKey = key
             isLoggedIn = true
             
-            // Сохраняем имя пользователя если предоставлено
             if let username = username, !username.isEmpty {
                 _ = saveToKeychain(username, account: usernameAccount)
                 self.username = username
@@ -67,10 +63,8 @@ final class AuthManager: ObservableObject {
             kSecValueData as String: data
         ]
         
-        // Сначала удаляем существующую запись
         _ = SecItemDelete(query as CFDictionary)
         
-        // Добавляем новую
         var addItemQuery = query
         addItemQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
         

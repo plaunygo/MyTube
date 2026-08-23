@@ -11,14 +11,14 @@ final class VideoViewModel: ObservableObject {
 
     @Published var mode: Mode = .browse
     @Published var videos: [ResolvedVideo] = []
-    @Published var loading = false
+    @Published var loading: Bool = false
     @Published var current: ResolvedVideo?
     @Published var visibleComments: [VideoComment] = []
-    @Published var totalComments = 0
-    @Published var hasMoreComments = false
-    @Published var commentsLoading = false
+    @Published var totalComments: Int = 0
+    @Published var hasMoreComments: Bool = false
+    @Published var commentsLoading: Bool = false
     @Published var profile: ChannelProfile?
-    @Published var isPreviewOpen = false
+    @Published var isPreviewOpen: Bool = false
     @Published var downloadProgress: Double? = nil
     @Published var playbackError: String? = nil
 
@@ -31,21 +31,21 @@ final class VideoViewModel: ObservableObject {
 
     private var allComments: [VideoComment] = []
     private var commentsToken: String?
-    private let resolver = StreamResolver()
+    private let resolver = StreamResolver.shared
     private let keyboard = KeyboardController()
-    private var profileHeld = false
+    private var profileHeld: Bool = false
 
     init() {
         keyboard.onSearch = {
             NotificationCenter.default.post(name: .focusSearch, object: nil)
         }
-        keyboard.onSpaceDown  = { [weak self] in DispatchQueue.main.async { self?.spaceDown() } }
-        keyboard.onSpaceUp    = { [weak self] in DispatchQueue.main.async { self?.spaceUp() } }
-        keyboard.onSeekLeft   = { [weak self] in DispatchQueue.main.async { self?.active.seek(-5) } }
-        keyboard.onSeekRight  = { [weak self] in DispatchQueue.main.async { self?.active.seek(5) } }
-        keyboard.onVolumeUp   = { [weak self] in DispatchQueue.main.async { self?.active.volume(5) } }
+        keyboard.onSpaceDown = { [weak self] in DispatchQueue.main.async { self?.spaceDown() } }
+        keyboard.onSpaceUp = { [weak self] in DispatchQueue.main.async { self?.spaceUp() } }
+        keyboard.onSeekLeft = { [weak self] in DispatchQueue.main.async { self?.active.seek(-5) } }
+        keyboard.onSeekRight = { [weak self] in DispatchQueue.main.async { self?.active.seek(5) } }
+        keyboard.onVolumeUp = { [weak self] in DispatchQueue.main.async { self?.active.volume(5) } }
         keyboard.onVolumeDown = { [weak self] in DispatchQueue.main.async { self?.active.volume(-5) } }
-        keyboard.onEscape     = { [weak self] in DispatchQueue.main.async { self?.escape() } }
+        keyboard.onEscape = { [weak self] in DispatchQueue.main.async { self?.escape() } }
         keyboard.start()
 
         downloader.onProgress = { [weak self] p in
@@ -56,7 +56,6 @@ final class VideoViewModel: ObservableObject {
             DispatchQueue.main.async { self?.closePreview() }
         }
         
-        // Инициализируем API ключ из AuthManager при загрузке
         Task { @MainActor [weak self] in await self?.loadInitial() }
     }
 
